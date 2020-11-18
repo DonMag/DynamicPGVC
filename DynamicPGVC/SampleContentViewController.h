@@ -11,6 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SampleContentViewController : UIViewController
 
+@property (strong, nonatomic) NSString *titleString;
 @property (strong, nonatomic) NSString *contentString;
 
 @end

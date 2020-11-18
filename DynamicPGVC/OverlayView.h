@@ -16,6 +16,13 @@ typedef void(^MyCustomBlock)(void);
 @property (nonatomic, copy) MyCustomBlock closeButtonBlock;
 @property (nonatomic, copy) MyCustomBlock bottomButtonBlock;
 
+- (void)setTitle:(NSString *)str;
+
+- (void)addLabel:(NSString *)str;
+- (void)addImageNamed:(NSString *)str;
+- (void)addPageViewController:(UIPageViewController *)pgVC withPages:(NSMutableArray *)pages;
+- (void)setButtonTitle:(NSString *)str;
+
 @end
 
 NS_ASSUME_NONNULL_END

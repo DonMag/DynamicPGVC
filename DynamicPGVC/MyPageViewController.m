@@ -55,4 +55,12 @@
 	return 0;
 }
 
+#ifdef DEBUG
+// during dev / debugging, verify we haven't created a retain cycle
+- (void)dealloc
+{
+	NSLog(@"MyPageViewController view is being dealloc'd");
+}
+#endif
+
 @end

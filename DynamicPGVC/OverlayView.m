@@ -7,6 +7,18 @@
 
 #import "OverlayView.h"
 
+@interface OverlayView ()
+{
+	UIButton *closeButton;
+	
+	UIView *framingView;
+	UILabel *titleLabel;
+	UIView *carouselWrapper;
+	UIButton *bottomButton;
+	UIStackView *stack;
+}
+@end
+
 @implementation OverlayView
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -33,11 +45,11 @@
 
 	UIButton *closeButton = [UIButton new];
 
-	UIView *framingView = [UIView new];
-	UILabel *titleLabel = [UILabel new];
-	UIView *carouselWrapper = [UIView new];
-	UIButton *bottomButton = [UIButton new];
-	UIStackView *stack = [UIStackView new];
+	framingView = [UIView new];
+	titleLabel = [UILabel new];
+	carouselWrapper = [UIView new];
+	bottomButton = [UIButton new];
+	stack = [UIStackView new];
 	
 	closeButton.translatesAutoresizingMaskIntoConstraints = NO;
 	framingView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -93,16 +105,9 @@
 	titleLabel.textColor = [UIColor colorWithRed:0.4 green:0.1 blue:0.9 alpha:1.0];
 	titleLabel.font = [UIFont systemFontOfSize:19.0 weight:UIFontWeightBold];
 	
-	carouselWrapper.backgroundColor = [UIColor colorWithRed:0.5 green:0.8 blue:1.0 alpha:1.0];
-
 	bottomButton.backgroundColor = [UIColor colorWithRed:0.4 green:0.1 blue:0.9 alpha:1.0];
-	[bottomButton setTitle:@"Eu quero!" forState:UIControlStateNormal];
 	[bottomButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
 	[bottomButton setTitleColor:[UIColor colorWithWhite:0.5 alpha:1.0] forState:UIControlStateHighlighted];
-	
-	//[carouselWrapper.heightAnchor constraintEqualToConstant:150.0].active = YES;
-	
-	titleLabel.text = @"Testing";
 	
 	[closeButton addTarget:self action:@selector(closeButtonTapped) forControlEvents:UIControlEventTouchUpInside];
 	[bottomButton addTarget:self action:@selector(bottomButtonTapped) forControlEvents:UIControlEventTouchUpInside];
@@ -114,6 +119,7 @@
 - (void)bottomButtonTapped {
 	_bottomButtonBlock();
 }
+
 #ifdef DEBUG
 // during dev / debugging, verify we haven't created a retain cycle
 - (void)dealloc
@@ -121,4 +127,102 @@
 	NSLog(@"Overlay view is being dealloc'd");
 }
 #endif
+
+// MARK: setups
+- (void)addLabel:(NSString *)str {
+	
+	UILabel *v = [UILabel new];
+	v.numberOfLines = 0;
+	v.textAlignment = NSTextAlignmentCenter;
+	v.text = str;
+	v.translatesAutoresizingMaskIntoConstraints = NO;
+
+	[carouselWrapper addSubview:v];
+	[NSLayoutConstraint activateConstraints:@[
+		// constrain label with 12-pts padding on all sides
+		[v.topAnchor constraintEqualToAnchor:carouselWrapper.topAnchor constant:12.0],
+		[v.leadingAnchor constraintEqualToAnchor:carouselWrapper.leadingAnchor constant:12.0],
+		[v.trailingAnchor constraintEqualToAnchor:carouselWrapper.trailingAnchor constant:-12.0],
+		[v.bottomAnchor constraintEqualToAnchor:carouselWrapper.bottomAnchor constant:-12.0],
+	]];
+
+	carouselWrapper.backgroundColor = [UIColor whiteColor];
+	
+}
+
+- (void)addImageNamed:(NSString *)str {
+	
+	UIImageView *v = [UIImageView new];
+	v.contentMode = UIViewContentModeScaleAspectFit;
+	v.backgroundColor = [UIColor redColor];
+	UIImage *img = [UIImage imageNamed:str];
+	CGFloat factor = 1.0;
+	if (img) {
+		v.image = img;
+		factor = img.size.height / img.size.width;
+	}
+	v.translatesAutoresizingMaskIntoConstraints = NO;
+	
+	[carouselWrapper addSubview:v];
+	[NSLayoutConstraint activateConstraints:@[
+		// constrain image to all sides
+		[v.topAnchor constraintEqualToAnchor:carouselWrapper.topAnchor constant:0.0],
+		[v.leadingAnchor constraintEqualToAnchor:carouselWrapper.leadingAnchor constant:0.0],
+		[v.trailingAnchor constraintEqualToAnchor:carouselWrapper.trailingAnchor constant:0.0],
+		[v.bottomAnchor constraintEqualToAnchor:carouselWrapper.bottomAnchor constant:0.0],
+		
+		// use loaded image aspect ratio for height
+		[v.heightAnchor constraintEqualToAnchor:v.widthAnchor multiplier:factor],
+	]];
+
+	carouselWrapper.backgroundColor = [UIColor whiteColor];
+	
+}
+
+- (void)addPageViewController:(UIPageViewController *)pgVC withPages:(NSMutableArray *)pages {
+	
+	CGFloat maxHeight = 0;
+	
+	CGSize fitSize = CGSizeMake(carouselWrapper.frame.size.width, UILayoutFittingCompressedSize.height);
+
+	for (UIViewController *vc in pages) {
+		// get size of page view
+		CGSize sz = [vc.view systemLayoutSizeFittingSize:fitSize withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityDefaultLow];
+		maxHeight = MAX(sz.height, maxHeight);
+	}
+	
+	// if using the built-in PageControl
+	//	add height of PageControl + 1.5 (control is shown 1.5-pts below the view)
+	UIPageControl *c = [UIPageControl new];
+	maxHeight += [c sizeForNumberOfPages:1].height + 1.5;
+
+	// loaded as YES, so we need to set it to NO
+	pgVC.view.translatesAutoresizingMaskIntoConstraints = NO;
+
+	// add view to _carouselWrapper
+	[carouselWrapper addSubview:pgVC.view];
+
+	// constrain to all 4 sides
+	[NSLayoutConstraint activateConstraints:@[
+		[pgVC.view.topAnchor constraintEqualToAnchor:carouselWrapper.topAnchor],
+		[pgVC.view.leadingAnchor constraintEqualToAnchor:carouselWrapper.leadingAnchor],
+		[pgVC.view.trailingAnchor constraintEqualToAnchor:carouselWrapper.trailingAnchor],
+		[pgVC.view.bottomAnchor constraintEqualToAnchor:carouselWrapper.bottomAnchor],
+
+		// height as determined above
+		[pgVC.view.heightAnchor constraintEqualToConstant:maxHeight],
+	]];
+
+	carouselWrapper.backgroundColor = [UIColor colorWithRed:0.4 green:0.1 blue:0.9 alpha:1.0];
+
+}
+
+- (void)setTitle:(NSString *)str {
+	titleLabel.text = str;
+}
+
+- (void)setButtonTitle:(NSString *)str {
+	[bottomButton setTitle:str forState:UIControlStateNormal];
+}
+
 @end
