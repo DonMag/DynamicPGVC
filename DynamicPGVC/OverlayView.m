@@ -93,6 +93,9 @@
 	
 	// element properties
 	
+	carouselWrapper.layer.borderColor = [[UIColor colorWithRed:0.4 green:0.1 blue:0.9 alpha:1.0] CGColor];
+	carouselWrapper.layer.borderWidth = 1;
+	
 	framingView.backgroundColor = [UIColor whiteColor];
 	framingView.layer.cornerRadius = 16.0;
 	
